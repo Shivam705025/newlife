@@ -22,26 +22,17 @@
 
     <script>
         // Function to fetch BSC coins
-        async function getBSCCoins() {
-            const response = await fetch('https://api.coingecko.com/api/v3/coins/markets', {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                params: {
-                    vs_currency: 'usd',
-                    ids: 'binancecoin',
-                    order: 'market_cap_desc',
-                    per_page: 100,
-                    page: 1,
-                    sparkline: false,
-                    price_change_percentage: '24h',
-                },
-            });
+async function getBSCCoins() {
+    const response = await fetch('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=binancecoin&order=market_cap_desc&per_page=100&page=1&sparkline=false&price_change_percentage=24h', {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+    });
 
-            const data = await response.json();
-            return data;
-        }
+    const data = await response.json();
+    return data;
+}
 
         // Function to fetch prices from Uniswap and Sushiswap
         async function getPrices(coinId) {
