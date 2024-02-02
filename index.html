@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crypto Price Comparison</title>
+</head>
+<body>
+    <h1>Top 100 Binance Smart Chain Coins</h1>
+    <table border="1">
+        <thead>
+            <tr>
+                <th>Coin</th>
+                <th>Symbol</th>
+                <th>Price on Uniswap</th>
+                <th>Price on Sushiswap</th>
+                <th>Price Difference</th>
+            </tr>
+        </thead>
+        <tbody id="coinTableBody"></tbody>
+    </table>
+
+    <script>
+        // Function to fetch BSC coins
+        async function getBSCCoins() {
+            const response = await fetch('https://api.coingecko.com/api/v3/coins/markets', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                params: {
+                    vs_currency: 'usd',
+                    ids: 'binancecoin',
+                    order: 'market_cap_desc',
+                    per_page: 100,
+                    page: 1,
+                    sparkline: false,
+                    price_change_percentage: '24h',
+                },
+            });
+
+            const data = await response.json();
+            return data;
+        }
+
+        // Function to fetch prices from Uniswap and Sushiswap
+        async function getPrices(coinId) {
+            const uniswapResponse = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${coinId}&vs_currencies=usd&include_market_cap=false&include_24hr_vol=false&include_24hr_change=false&include_last_updated_at=false`);
+            const sushiswapResponse = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${coinId}&vs_currencies=usd&include_market_cap=false&include_24hr_vol=false&include_24hr_change=false&include_last_updated_at=false`);
+
+            const uniswapData = await uniswapResponse.json();
+            const sushiswapData = await sushiswapResponse.json();
+
+            return {
+                uniswap: uniswapData[coinId].usd,
+                sushiswap: sushiswapData[coinId].usd,
+            };
+        }
+
+        // Function to update HTML table with data
+        async function updateTable() {
+            const coins = await getBSCCoins();
+            const tableBody = document.getElementById('coinTableBody');
+
+            for (const coin of coins) {
+                const prices = await getPrices(coin.id);
+
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${coin.name}</td>
+                    <td>${coin.symbol.toUpperCase()}</td>
+                    <td>${prices.uniswap || 'N/A'}</td>
+                    <td>${prices.sushiswap || 'N/A'}</td>
+                    <td>${(prices.uniswap - prices.sushiswap) || 'N/A'}</td>
+                `;
+
+                tableBody.appendChild(row);
+            }
+        }
+
+        // Call the updateTable function when the page loads
+        updateTable();
+    </script>
+</body>
+</html>
