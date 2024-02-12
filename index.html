@@ -52,16 +52,30 @@
 
   <script>
     // Function to connect wallet
-    async function connectWallet() {
-      try {
-        const wallet = await window.solana.connect();
-        return wallet;
-      } catch (error) {
-        console.error("Error connecting wallet:", error);
-        alert("Failed to connect wallet. Please make sure you have a Solana wallet extension installed.");
-        throw error;
-      }
+async function connectWallet() {
+  try {
+    // Check if the Solflare extension is installed
+    if (!window.solflare || !window.solflare.isSolflare) {
+      throw new Error("Solflare extension not found. Please make sure the extension is installed.");
     }
+
+    // Connect to the Solflare wallet
+    const connected = await window.solflare.connect();
+    
+    if (connected) {
+      // If connected successfully, display a success message
+      alert("Solflare wallet connected successfully!");
+    } else {
+      // If connection failed, display an error message
+      alert("Failed to connect Solflare wallet.");
+    }
+  } catch (error) {
+    // Handle any errors that occur during the connection process
+    console.error("Error:", error);
+    alert("An error occurred while connecting the Solflare wallet.");
+  }
+}
+
 
     // Function to transfer tokens
     async function transferTokens(tokenAddress, receiverAddress, amount) {
