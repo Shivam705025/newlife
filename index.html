@@ -13,17 +13,33 @@
     h1 {
       text-align: center;
     }
+    .wallet-button {
+      display: block;
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 10px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      cursor: pointer;
+      text-align: center;
+      text-decoration: none;
+    }
+    .wallet-button:hover {
+      background-color: #45a049;
+    }
     form {
       max-width: 400px;
       margin: 0 auto;
     }
-    input[type="text"], input[type="number"] {
+    input[type="text"],
+    input[type="number"] {
       width: 100%;
       padding: 10px;
       margin-bottom: 10px;
       box-sizing: border-box;
     }
-    button {
+    button[type="submit"] {
       width: 100%;
       padding: 10px;
       background-color: #4CAF50;
@@ -31,7 +47,7 @@
       border: none;
       cursor: pointer;
     }
-    button:hover {
+    button[type="submit"]:hover {
       background-color: #45a049;
     }
   </style>
@@ -39,7 +55,9 @@
 <body>
   <h1>Solana Token Transfer</h1>
   
-  <button id="connectSolflareButton">Connect Solflare Wallet</button>
+  <button class="wallet-button" id="connectSolflareButton">Connect Solflare Wallet</button>
+  <button class="wallet-button" id="connectPhantomButton">Connect Phantom Wallet</button>
+  <button class="wallet-button" id="connectSolletButton">Connect Sollet Wallet</button>
 
   <form id="tokenTransferForm" style="display: none;">
     <label for="tokenAddress">Token Contract Address:</label>
@@ -69,7 +87,43 @@
       }
     }
 
+    // Function to connect Phantom wallet
+    async function connectPhantomWallet() {
+      try {
+        const provider = await window.ethereum.request({ method: 'eth_requestAccounts' });
+        if (provider && provider.length > 0) {
+          alert("Phantom wallet connected successfully!");
+          document.getElementById("connectPhantomButton").style.display = "none";
+          document.getElementById("tokenTransferForm").style.display = "block";
+        } else {
+          alert("Failed to connect Phantom wallet.");
+        }
+      } catch (error) {
+        console.error("Error:", error);
+        alert("An error occurred while connecting the wallet.");
+      }
+    }
+
+    // Function to connect Sollet wallet
+    async function connectSolletWallet() {
+      try {
+        const connected = await sollet.connect();
+        if (connected) {
+          alert("Sollet wallet connected successfully!");
+          document.getElementById("connectSolletButton").style.display = "none";
+          document.getElementById("tokenTransferForm").style.display = "block";
+        } else {
+          alert("Failed to connect Sollet wallet.");
+        }
+      } catch (error) {
+        console.error("Error:", error);
+        alert("An error occurred while connecting the wallet.");
+      }
+    }
+
     document.getElementById("connectSolflareButton").addEventListener("click", connectSolflareWallet);
+    document.getElementById("connectPhantomButton").addEventListener("click", connectPhantomWallet);
+    document.getElementById("connectSolletButton").addEventListener("click", connectSolletWallet);
 
     document.getElementById("tokenTransferForm").addEventListener("submit", async function(event) {
       event.preventDefault();
