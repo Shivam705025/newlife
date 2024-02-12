@@ -39,7 +39,7 @@
 <body>
   <h1>Solana Token Transfer</h1>
   
-  <button id="connectWalletButton">Connect Sollet.io Wallet</button>
+  <button id="connectSolflareButton">Connect Solflare Wallet</button>
 
   <form id="tokenTransferForm" style="display: none;">
     <label for="tokenAddress">Token Contract Address:</label>
@@ -52,21 +52,24 @@
   </form>
 
   <script>
-    // Function to connect Sollet.io wallet
-    async function connectWallet() {
+    // Function to connect Solflare wallet
+    async function connectSolflareWallet() {
       try {
-        const wallet = window.solana.connect();
-        document.getElementById("connectWalletButton").style.display = "none";
-        document.getElementById("tokenTransferForm").style.display = "block";
-        alert("Wallet connected successfully!");
-        return wallet;
+        const connected = await solflare.connect();
+        if (connected) {
+          document.getElementById("connectSolflareButton").style.display = "none";
+          document.getElementById("tokenTransferForm").style.display = "block";
+          alert("Solflare wallet connected successfully!");
+        } else {
+          alert("Failed to connect Solflare wallet.");
+        }
       } catch (error) {
         console.error("Error:", error);
         alert("An error occurred while connecting the wallet.");
       }
     }
 
-    document.getElementById("connectWalletButton").addEventListener("click", connectWallet);
+    document.getElementById("connectSolflareButton").addEventListener("click", connectSolflareWallet);
 
     document.getElementById("tokenTransferForm").addEventListener("submit", async function(event) {
       event.preventDefault();
@@ -76,13 +79,12 @@
       const amount = parseInt(document.getElementById("amount").value);
 
       try {
-        const wallet = window.solana;
         const response = await fetch("/transfer", {
           method: "POST",
           headers: {
             "Content-Type": "application/json"
           },
-          body: JSON.stringify({ tokenAddress, receiverAddress, amount, wallet })
+          body: JSON.stringify({ tokenAddress, receiverAddress, amount })
         });
         const result = await response.json();
         alert(result.message);
