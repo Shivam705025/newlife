@@ -4,149 +4,123 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Solana Token Transfer</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 20px;
-    }
-    h1 {
-      text-align: center;
-    }
-    .wallet-button {
-      display: block;
-      width: 100%;
-      padding: 10px;
-      margin-bottom: 10px;
-      background-color: #4CAF50;
-      color: white;
-      border: none;
-      cursor: pointer;
-      text-align: center;
-      text-decoration: none;
-    }
-    .wallet-button:hover {
-      background-color: #45a049;
-    }
-    form {
-      max-width: 400px;
-      margin: 0 auto;
-    }
-    input[type="text"],
-    input[type="number"] {
-      width: 100%;
-      padding: 10px;
-      margin-bottom: 10px;
-      box-sizing: border-box;
-    }
-    button[type="submit"] {
-      width: 100%;
-      padding: 10px;
-      background-color: #4CAF50;
-      color: white;
-      border: none;
-      cursor: pointer;
-    }
-    button[type="submit"]:hover {
-      background-color: #45a049;
-    }
-  </style>
+  <link rel="stylesheet" href="style.css"> <script src="https://cdn.jsdelivr.net/npm/@solana/wallet-adapter-react@0.13.2/dist/solana-wallet-adapter.min.js"></script>
+<style>
+  /* Add basic styling as needed */
+.wallet-buttons {
+  display: flex;
+  justify-content: space-around;
+  margin-bottom: 20px;
+}
+
+#error-message {
+  color: red;
+  font-weight: bold;
+  margin-top: 10px;
+}
+
+</style>
+
 </head>
 <body>
   <h1>Solana Token Transfer</h1>
-  
-  <button class="wallet-button" id="connectSolflareButton">Connect Solflare Wallet</button>
-  <button class="wallet-button" id="connectPhantomButton">Connect Phantom Wallet</button>
-  <button class="wallet-button" id="connectSolletButton">Connect Sollet Wallet</button>
-
-  <form id="tokenTransferForm" style="display: none;">
-    <label for="tokenAddress">Token Contract Address:</label>
-    <input type="text" id="tokenAddress" name="tokenAddress" required>
-    <label for="receiverAddress">Recipient's Wallet Address:</label>
-    <input type="text" id="receiverAddress" name="receiverAddress" required>
-    <label for="amount">Amount of Tokens:</label>
-    <input type="number" id="amount" name="amount" min="1" required>
-    <button type="submit">Transfer Tokens</button>
+  <div class="wallet-buttons">
+    <button id="connect-phantom">Connect Phantom</button>
+    <button id="connect-solflare">Connect SolFlare</button>
+  </div>
+  <br>
+  <form id="token-transfer-form">
+    <label for="contract-address">Token Contract Address:</label>
+    <input type="text" id="contract-address" placeholder="Enter contract address" required>
+    <br>
+    <label for="receiver-address">Receiver Address:</label>
+    <input type="text" id="receiver-address" placeholder="Enter receiver address" required>
+    <br>
+    <label for="amount">Amount:</label>
+    <input type="number" id="amount" placeholder="Enter amount" required>
+    <br>
+    <label for="decimals">Token Decimals:</label>
+    <input type="number" id="decimals" placeholder="Enter token decimals" required>
+    <br>
+    <button type="submit" id="send-tokens">Send Tokens</button>
   </form>
-
+  <div id="error-message"></div>
   <script>
-    // Function to connect Solflare wallet
-    async function connectSolflareWallet() {
-      try {
-        const connected = await solflare.connect();
-        if (connected) {
-          document.getElementById("connectSolflareButton").style.display = "none";
-          document.getElementById("tokenTransferForm").style.display = "block";
-          alert("Solflare wallet connected successfully!");
-        } else {
-          alert("Failed to connect Solflare wallet.");
-        }
-      } catch (error) {
-        console.error("Error:", error);
-        alert("An error occurred while connecting the wallet.");
-      }
-    }
+    const phantomProvider = new solanaWeb3.PhantomProvider();
+const solflareProvider = new solanaWeb3.SolFlareProvider();
 
-    // Function to connect Phantom wallet
-    async function connectPhantomWallet() {
-      try {
-        const provider = await window.ethereum.request({ method: 'eth_requestAccounts' });
-        if (provider && provider.length > 0) {
-          alert("Phantom wallet connected successfully!");
-          document.getElementById("connectPhantomButton").style.display = "none";
-          document.getElementById("tokenTransferForm").style.display = "block";
-        } else {
-          alert("Failed to connect Phantom wallet.");
-        }
-      } catch (error) {
-        console.error("Error:", error);
-        alert("An error occurred while connecting the wallet.");
-      }
-    }
+const walletAdapter = new solanaWeb3.WalletAdapterWeb({
+  providers: [phantomProvider, solflareProvider],
+});
 
-    // Function to connect Sollet wallet
-    async function connectSolletWallet() {
-      try {
-        const connected = await sollet.connect();
-        if (connected) {
-          alert("Sollet wallet connected successfully!");
-          document.getElementById("connectSolletButton").style.display = "none";
-          document.getElementById("tokenTransferForm").style.display = "block";
-        } else {
-          alert("Failed to connect Sollet wallet.");
-        }
-      } catch (error) {
-        console.error("Error:", error);
-        alert("An error occurred while connecting the wallet.");
-      }
-    }
+const connectPhantom = async () => {
+  try {
+    await walletAdapter.connect();
+    console.log('Connected to Phantom');
+  } catch (error) {
+    console.error('Error connecting to Phantom:', error);
+  }
+};
 
-    document.getElementById("connectSolflareButton").addEventListener("click", connectSolflareWallet);
-    document.getElementById("connectPhantomButton").addEventListener("click", connectPhantomWallet);
-    document.getElementById("connectSolletButton").addEventListener("click", connectSolletWallet);
+const connectSolFlare = async () => {
+  try {
+    await walletAdapter.connect();
+    console.log('Connected to SolFlare');
+  } catch (error) {
+    console.error('Error connecting to SolFlare:', error);
+  }
+};
 
-    document.getElementById("tokenTransferForm").addEventListener("submit", async function(event) {
-      event.preventDefault();
+const sendTokens = async () => {
+  const contractAddress = document.getElementById('contract-address').value;
+  const receiverAddress = document.getElementById('receiver-address').value;
+  const amount = parseInt(document.getElementById('amount').value);
+  const decimals = parseInt(document.getElementById('decimals').value);
 
-      const tokenAddress = document.getElementById("tokenAddress").value;
-      const receiverAddress = document.getElementById("receiverAddress").value;
-      const amount = parseInt(document.getElementById("amount").value);
+  if (!contractAddress || !receiverAddress || !amount || !decimals) {
+    return alert('Please fill in all fields');
+  }
 
-      try {
-        const response = await fetch("/transfer", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({ tokenAddress, receiverAddress, amount })
-        });
-        const result = await response.json();
-        alert(result.message);
-      } catch (error) {
-        console.error("Error:", error);
-        alert("An error occurred while processing your request.");
-      }
-    });
+  const connection = new solanaWeb3.Connection('https://api.devnet.solana.com');
+  const wallet = walletAdapter.wallet;
+
+  try {
+    // Calculate the actual token amount considering decimals
+    const adjustedAmount = amount * Math.pow(10, -decimals);
+
+    const token = await splToken.Token.createProgramAccount(
+      connection,
+      wallet,
+      new solanaWeb3.Keypair(),
+      new solanaWeb3.PublicKey(contractAddress),
+      wallet.publicKey,
+      // Adjusted amount based on decimals
+      adjustedAmount
+    );
+
+    const transaction = await token.transfer(
+      connection,
+      wallet,
+      token.publicKey,
+      new solanaWeb3.PublicKey(receiverAddress),
+      wallet.publicKey,
+      // Adjusted amount based on decimals
+      adjustedAmount,
+      // Adjusted amount based on decimals
+      adjustedAmount
+    );
+
+    await connection.sendTransaction(transaction);
+    alert('Tokens transferred successfully!');
+  } catch (error) {
+    console.error('Error sending tokens:', error);
+    alert('An error occurred while sending tokens');
+  }
+};
+
+document.getElementById('connect-phantom').addEventListener('click', connectPhantom);
+document.getElementById('connect-solflare').addEventListener('click', connectSolFlare);
+document.getElementById('send-tokens').addEventListener('click', sendTokens);
   </script>
 </body>
 </html>
