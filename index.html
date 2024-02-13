@@ -55,18 +55,31 @@ transferButton.addEventListener("click", async () => {
     const token = new solanaWeb3.PublicKey(tokenAddress);
     const receiver = new solanaWeb3.PublicKey(receiverAddress);
 
-    // Create transfer instruction
+        // Get associated token accounts (source and destination)
+        const sourceAddress = await solanaWeb3.Token.getAssociatedTokenAddress(
+          solanaWeb3.TokenProgramId,
+          solanaWeb3.TOKEN_PROGRAM_ID,
+          token,
+          wallet.publicKey,
+        );
+        const destinationAddress = await solanaWeb3.Token.getAssociatedTokenAddress(
+          solanaWeb3.TokenProgramId,
+          solanaWeb3.TOKEN_PROGRAM_ID,
+          token,
+          receiver,
+        );
+
+        // Create transfer instruction
         const transaction = new solanaWeb3.Transaction().add(
           solanaWeb3.Token.createTransferInstruction(
             solanaWeb3.TOKEN_PROGRAM_ID,
-            wallet.publicKey,
-            receiver,
+            sourceAddress,
+            destinationAddress,
             wallet.publicKey,
             [],
             parseInt(amount),
           )
         );
-    
 // Sign and send the transaction
 await wallet.signTransaction(transaction);
 const signature = await connection.sendRawTransaction(transaction);
