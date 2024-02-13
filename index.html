@@ -60,35 +60,18 @@ transferButton.addEventListener("click", async () => {
 // Define variables to hold ATA addresses
 let sourceAddress;
 let destinationAddress;
-let sourceExists;
-let destExists;
 
-// Use existing ATAs if they exist, otherwise create them
-if (sourceExists) {
-  sourceAddress = new PublicKey(sourceAccount[0].pubkey); // Extract address from existing account
-} else {
-  // Create source ATA (payer can be adjusted based on fee strategy)
-  const createSourceTx = await createAssociatedTokenAccountInstruction(
-    connection.payer, // Payer for transaction fee
-    wallet, // Owner of the new account
-    wallet, // Associated token account address
-    token, // Token address
-  );
-  sourceAddress = new solanaWeb3.PublicKey(createSourceTx.accountInfo.address); // Get address from instruction
-}
+const [sourceExists, sourceAccount] = await connection.getTokenAccountsByOwner(
+  wallet,
+  token,
+);
 
-if (destExists) {
-  destinationAddress = new solanaWeb3.PublicKey(destAccount[0].pubkey); // Extract address from existing account
-} else {
-  // Create destination ATA (payer can be adjusted based on fee strategy)
-  const createDestTx = await createAssociatedTokenAccountInstruction(
-    connection.payer, // Payer for transaction fee
-    wallet, // Owner of the new account
-    receiver, // Associated token account address
-    token, // Token address
-  );
-  destinationAddress = new solanaWeb3.PublicKey(createDestTx.accountInfo.address); // Get address from instruction
-}
+const [destExists, destAccount] = await connection.getTokenAccountsByOwner(
+  receiver,
+  token,
+);
+sourceAddress = sourceAccount.accountInfo.address; 
+destinationAddress = destAccount.accountInfo.address; 
 
         // Create transfer instruction
         const transaction = new solanaWeb3.Transaction().add(
