@@ -78,55 +78,48 @@ async function connectWallet() {
   }
 }
 
+async function transferTokens(tokenAddress, receiverAddress, amount) {
+  try {
+    const wallet = await connectWallet();
+    // Create a connection to the Solana testnet
+    const connection = new web3.Connection(
+      "https://solana-testnet-quicknode.herokuapp.com", // QuickNode testnet RPC endpoint
+      'confirmed',
+    );
 
+    // Get the token account of the sender
+    const senderTokenAccount = await splToken.Token.getAssociatedTokenAddress(
+      splToken.TOKEN_PROGRAM_ID,
+      new web3.PublicKey(tokenAddress),
+      wallet.publicKey, // Use wallet's public key
+    );
 
-    // Function to transfer tokens
-    async function transferTokens(tokenAddress, receiverAddress, amount) {
-      const wallet = await connectWallet();
-
-      // Get the secret key from the connected wallet
-      const senderSecretKey = await wallet.getSecretKey();
-
-      // Convert the secret key to a Uint8Array
-      const senderSecretKeyArray = new Uint8Array(senderSecretKey);
-
-      // Create a new wallet from the provided secret key
-      const senderWallet = web3.Keypair.fromSecretKey(senderSecretKeyArray);
-
-      // Create a connection to the Solana testnet
-      const connection = new web3.Connection(
-        "https://solana-testnet-quicknode.herokuapp.com", // QuickNode testnet RPC endpoint
-        'confirmed',
-      );
-
-      // Get the token account of the sender
-      const senderTokenAccount = await splToken.Token.getAssociatedTokenAddress(
+    // Create a transaction to transfer tokens
+    const transaction = new web3.Transaction().add(
+      splToken.Token.createTransferInstruction(
         splToken.TOKEN_PROGRAM_ID,
-        new web3.PublicKey(tokenAddress),
-        senderWallet.publicKey,
-      );
+        senderTokenAccount,
+        new web3.PublicKey(receiverAddress),
+        wallet.publicKey, // Use wallet's public key
+        [],
+        amount // Amount of tokens to send
+      ),
+    );
 
-      // Create a transaction to transfer tokens
-      const transaction = new web3.Transaction().add(
-        splToken.Token.createTransferInstruction(
-          splToken.TOKEN_PROGRAM_ID,
-          senderTokenAccount,
-          new web3.PublicKey(receiverAddress),
-          senderWallet.publicKey,
-          [],
-          amount // Amount of tokens to send
-        ),
-      );
+    // Sign the transaction using the connected wallet
+    const signature = await web3.sendAndConfirmTransaction(
+      connection,
+      transaction,
+      [wallet]
+    );
 
-      // Sign the transaction
-      const signature = await web3.sendAndConfirmTransaction(
-        connection,
-        transaction,
-        [senderWallet]
-      );
-
-      return { message: "Transaction confirmed. Signature: " + signature };
-    }
+    return { message: "Transaction confirmed. Signature: " + signature };
+  } catch (error) {
+    // Handle any errors that occur during the transaction
+    console.error("Error:", error);
+    throw new Error("An error occurred while transferring tokens.");
+  }
+}
 
     document.getElementById("tokenTransferForm").addEventListener("submit", async function(event) {
       event.preventDefault();
