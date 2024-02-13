@@ -3,7 +3,7 @@
 <head>
   <title>Solana Token Transfer DApp</title>
   <script src="https://unpkg.com/@solana/web3.js@latest/lib/index.iife.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@solana/spl-token@0.4.0/lib/cjs/index.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@solana/spl-token@latest/lib/cjs/index.min.js"></script>
 </head>
 <body>
   <h1>Solana Token Transfer</h1>
@@ -23,6 +23,7 @@
   <button id="transferTokens" disabled>Transfer Tokens</button>
   <div id="status"></div>
   <script>
+    // Your JavaScript code goes here
     const connectButton = document.getElementById("connectWallet");
 const transferButton = document.getElementById("transferTokens");
 const statusElement = document.getElementById("status");
@@ -30,7 +31,6 @@ const statusElement = document.getElementById("status");
 connectButton.addEventListener("click", async () => {
   try {
     const connection = new solanaWeb3.Connection("https://api.mainnet-beta.solana.com");
-    await window.solana.connect();
     const provider = window.solana; // Access wallet provider globally
     const wallet = await provider.connect();
     const publicKey = wallet.publicKey.toBase58();
@@ -55,28 +55,51 @@ transferButton.addEventListener("click", async () => {
     const token = new solanaWeb3.PublicKey(tokenAddress);
     const receiver = new solanaWeb3.PublicKey(receiverAddress);
 
-    const transaction = new solanaWeb3.Transaction({
-      feePayer: wallet.publicKey,
-      instructions: [
-        await Token.createTransferCheckedInstruction(
-          token,
-          wallet.publicKey,
-          receiver,
-          wallet.publicKey,
-          new solanaWeb3.BN(amount)
-        )
-      ]
-    });
+    // Get associated token accounts (source and destination)
+    const sourceAddress = await solanaWeb3.getAssociatedTokenAccountAddress(
+      token,
+      wallet.publicKey,
+    );
+    const destinationAddress = await solanaWeb3.getAssociatedTokenAccountAddress(
+      token,
+      receiver,
+    );
 
-    const signature = await wallet.signTransaction(transaction);
-    const result = await connection.sendRawTransaction(signature);
+    // Create transfer instruction
+        const transaction = new solanaWeb3.Transaction().add(
+          solanaWeb3.Token.createTransferInstruction(
+            solanaWeb3.TOKEN_PROGRAM_ID,
+            sourceAddress,
+            destinationAddress,
+            wallet.publicKey,
+            [],
+            parseInt(amount),
+          )
+        );
+    
+// Sign and send the transaction
+await wallet.signTransaction(transaction);
+const signature = await connection.sendRawTransaction(transaction);
 
-    statusElement.textContent = `Transaction submitted: ${result}`;
+statusElement.textContent = `Transaction submitted: ${signature}`;
+
+// Handle transaction confirmation and potential errors
+connection.onSignatureStatus(
+  signature,
+  ({ status, err }) => {
+    if (err) {
+      statusElement.textContent = `Transaction failed: ${err.message}`;
+    } else if (status === "confirmed") {
+      statusElement.textContent = `Transaction succeeded: ${signature}`;
+    }
+  }
+);
   } catch (error) {
     console.error("Error transferring tokens:", error);
     statusElement.textContent = "Transaction failed";
   }
 });
+
   </script>
 </body>
 </html>
