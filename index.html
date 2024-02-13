@@ -60,12 +60,12 @@ transferButton.addEventListener("click", async () => {
 let sourceAddress;
 let destinationAddress;
 
-const [sourceExists, sourceAccount] = await connection.getTokenAccountsByOwner(
+const sourceAccount = await connection.getTokenAccountsByOwner(
   wallet,
   token,
 );
 
-const [destExists, destAccount] = await connection.getTokenAccountsByOwner(
+const destAccount= await connection.getTokenAccountsByOwner(
   receiver,
   token,
 );
