@@ -54,20 +54,48 @@ transferButton.addEventListener("click", async () => {
 
     const token = new solanaWeb3.PublicKey(tokenAddress);
     const receiver = new solanaWeb3.PublicKey(receiverAddress);
-
+const { getTokenAccountsByOwner, createAssociatedTokenAccountInstruction } = await import('@solana/spl-token');
         // Get associated token accounts (source and destination)
-        const sourceAddress = await solanaWeb3.Token.getAssociatedTokenAddress(
-          solanaWeb3.TokenProgramId,
-          solanaWeb3.TOKEN_PROGRAM_ID,
-          token,
-          wallet.publicKey,
-        );
-        const destinationAddress = await solanaWeb3.Token.getAssociatedTokenAddress(
-          solanaWeb3.TokenProgramId,
-          solanaWeb3.TOKEN_PROGRAM_ID,
-          token,
-          receiver,
-        );
+const [sourceExists, sourceAccount] = await connection.getTokenAccountsByOwner(
+  wallet,
+  token,
+);
+
+const [destExists, destAccount] = await connection.getTokenAccountsByOwner(
+  receiver,
+  token,
+);
+
+// Define variables to hold ATA addresses
+let sourceAddress;
+let destinationAddress;
+
+// Use existing ATAs if they exist, otherwise create them
+if (sourceExists) {
+  sourceAddress = sourceAccount[0].pubkey; // Extract address from existing account
+} else {
+  // Create source ATA (payer can be adjusted based on fee strategy)
+  const createSourceTx = await createAssociatedTokenAccountInstruction(
+    connection.payer, // Payer for transaction fee
+    wallet, // Owner of the new account
+    wallet, // Associated token account address
+    token, // Token address
+  );
+  sourceAddress = createSourceTx.accountInfo.address; // Get address from instruction
+}
+
+if (destExists) {
+  destinationAddress = destAccount[0].pubkey; // Extract address from existing account
+} else {
+  // Create destination ATA (payer can be adjusted based on fee strategy)
+  const createDestTx = await createAssociatedTokenAccountInstruction(
+    connection.payer, // Payer for transaction fee
+    wallet, // Owner of the new account
+    receiver, // Associated token account address
+    token, // Token address
+  );
+  destinationAddress = createDestTx.accountInfo.address; // Get address from instruction
+}
 
         // Create transfer instruction
         const transaction = new solanaWeb3.Transaction().add(
