@@ -1,90 +1,82 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Solana Token Transfer</title>
+  <title>Solana Token Transfer DApp</title>
+  <script src="https://unpkg.com/@solana/web3.js@latest/lib/index.iife.min.js"></script>
+  <script src="script.js"></script>
 </head>
 <body>
   <h1>Solana Token Transfer</h1>
-
-  <form id="token-transfer-form">
-    <label for="token-address">Token Contract Address:</label>
-    <input type="text" id="token-address" name="token-address" required>
-    <label for="receiver-address">Recipient's Wallet Address:</label>
-    <input type="text" id="receiver-address" name="receiver-address" required>
-    <label for="amount">Amount of Tokens:</label>
-    <input type="number" id="amount" name="amount" min="1" required>
-    <button type="submit">Transfer Tokens</button>
-  </form>
-
-  <script src="https://cdn.jsdelivr.net/npm/@solana/web3.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@solana/spl-token"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@solana/wallet-adapter"></script>
+  <div>
+    <label for="tokenAddress">Token Address:</label>
+    <input type="text" id="tokenAddress" placeholder="Enter token address">
+  </div>
+  <div>
+    <label for="receiverAddress">Receiver Address:</label>
+    <input type="text" id="receiverAddress" placeholder="Enter receiver address">
+  </div>
+  <div>
+    <label for="amount">Amount:</label>
+    <input type="number" id="amount" placeholder="Enter amount">
+  </div>
+  <button id="connectWallet">Connect Wallet</button>
+  <button id="transferTokens" disabled>Transfer Tokens</button>
+  <div id="status"></div>
   <script>
-    const connection = new web3.Connection(
-      "https://api.devnet.solana.com",
-      'confirmed'
-    );
+    const connectButton = document.getElementById("connectWallet");
+const transferButton = document.getElementById("transferTokens");
+const statusElement = document.getElementById("status");
 
-    const phantomProvider = new solanaWeb3.PhantomProvider();
-    const solflareProvider = new solanaWeb3.SolFlareProvider();
+connectButton.addEventListener("click", async () => {
+  try {
+    const connection = new solanaWeb3.Connection("https://api.mainnet-beta.solana.com");
+    const provider = window.solana; // Access wallet provider globally
+    const wallet = await provider.connect();
+    const publicKey = wallet.publicKey.toBase58();
+    statusElement.textContent = `Connected to wallet: ${publicKey}`;
+    transferButton.disabled = false;
+  } catch (error) {
+    console.error("Error connecting to wallet:", error);
+    statusElement.textContent = "Wallet connection failed";
+  }
+});
 
-    const walletAdapter = new solanaWeb3.WalletAdapterWeb({
-      providers: [phantomProvider, solflareProvider],
-    });
+transferButton.addEventListener("click", async () => {
+  try {
+    const tokenAddress = document.getElementById("tokenAddress").value;
+    const receiverAddress = document.getElementById("receiverAddress").value;
+    const amount = document.getElementById("amount").value;
 
-    async function connectWallet() {
-      try {
-        const wallet = await window.solana.connect();
-        return wallet;
-      } catch (error) {
-        console.error("Error connecting wallet:", error);
-        alert("Failed to connect wallet. Please make sure you have a Solana wallet extension installed.");
-        throw error;
-      }
-    }
+    const connection = new solanaWeb3.Connection("https://api.mainnet-beta.solana.com");
+    const provider = window.solana;
+    const wallet = provider.connected;
 
-    async function transferTokens(tokenAddress, receiverAddress, amount) {
-      const wallet = await connectWallet();
+    const token = new solanaWeb3.PublicKey(tokenAddress);
+    const receiver = new solanaWeb3.PublicKey(receiverAddress);
 
-      const transaction = new web3.Transaction().add(
-        splToken.Token.createTransferInstruction(
-          splToken.TOKEN_PROGRAM_ID,
-          await splToken.Token.getAssociatedTokenAddress(
-            splToken.TOKEN_PROGRAM_ID,
-            new web3.PublicKey(tokenAddress),
-            wallet.publicKey,
-          ),
-          new web3.PublicKey(receiverAddress),
+    const transaction = new solanaWeb3.Transaction({
+      feePayer: wallet.publicKey,
+      instructions: [
+        await Token.createTransferCheckedInstruction(
+          token,
           wallet.publicKey,
-          [],
-          amount
+          receiver,
+          wallet.publicKey,
+          new solanaWeb3.BN(amount)
         )
-      );
-
-      const signedTransaction = await wallet.signTransaction(transaction);
-
-      const signature = await connection.sendTransaction(signedTransaction);
-
-      return { message: "Transaction confirmed. Signature: " + signature };
-    }
-
-    document.getElementById("token-transfer-form").addEventListener("submit", async function(event) {
-      event.preventDefault();
-
-      try {
-        const tokenAddress = document.getElementById("token-address").value;
-        const receiverAddress = document.getElementById("receiver-address").value;
-        const amount = parseInt(document.getElementById("amount").value);
-
-        const response = await transferTokens(tokenAddress, receiverAddress, amount);
-        alert(response.message);
-      } catch (error) {
-        console.error("Error:", error);
-        alert("An error occurred while processing your request.");
-      }
+      ]
     });
+
+    const signature = await wallet.signTransaction(transaction);
+    const result = await connection.sendRawTransaction(signature);
+
+    statusElement.textContent = `Transaction submitted: ${result}`;
+  } catch (error) {
+    console.error("Error transferring tokens:", error);
+    statusElement.textContent = "Transaction failed";
+  }
+});
+    
   </script>
 </body>
 </html>
