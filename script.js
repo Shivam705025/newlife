@@ -1,4 +1,4 @@
-import { Token } from '@solana/web3.js';
+import { Token } from 'https://unpkg.com/@solana/web3.js@latest/lib/index.iife.min.js';
     const connectButton = document.getElementById("connectWallet");
 const transferButton = document.getElementById("transferTokens");
 const statusElement = document.getElementById("status");
