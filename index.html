@@ -63,18 +63,21 @@ async function connectWallet() {
     const connected = await window.solflare.connect();
     
     if (connected) {
-      // If connected successfully, display a success message
-      alert("Solflare wallet connected successfully!");
+      // If connected successfully, return the connected wallet
+      return window.solflare;
     } else {
-      // If connection failed, display an error message
+      // If connection failed, display an error message and return null
       alert("Failed to connect Solflare wallet.");
+      return null;
     }
   } catch (error) {
     // Handle any errors that occur during the connection process
     console.error("Error:", error);
     alert("An error occurred while connecting the Solflare wallet.");
+    return null;
   }
 }
+
 
 
     // Function to transfer tokens
