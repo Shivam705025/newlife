@@ -21,56 +21,37 @@
   <script src="https://cdn.jsdelivr.net/npm/@solana/web3.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@solana/spl-token"></script>
   <script>
-    async function transferTokens(tokenMintAddress, receiverAddress, amount, secretKey) {
+    async function transferTokens(tokenMintAddress, receiverAddress, amount) {
       try {
         // Connect to Solana devnet
         const connection = new web3.Connection(web3.clusterApiUrl('devnet'), 'confirmed');
 
-        // Create keypair from secret key
-        const fromWallet = web3.Keypair.fromSecretKey(secretKey);
+        // Connect to Solflare wallet
+        const wallet = await connectWallet();
 
         // Generate a new wallet to receive newly minted token
         const destPublicKey = new web3.PublicKey(receiverAddress);
         const destMint = new web3.PublicKey(tokenMintAddress);
 
-        // Get or create token account for the sender
-        const fromTokenAccount = await spl.getOrCreateAssociatedTokenAccount(
-          connection,
-          fromWallet,
-          destMint,
-          fromWallet.publicKey
-        );
-
         // Get or create token account for the receiver
         const toTokenAccount = await spl.getOrCreateAssociatedTokenAccount(
           connection,
-          fromWallet,
+          wallet,
           destMint,
           destPublicKey
         );
 
-        // Mint tokens to the sender's token account
-        const mintSignature = await spl.mintTo(
+        // Mint tokens to the receiver's token account
+        const signature = await spl.mintTo(
           connection,
-          fromWallet,
+          wallet,
           destMint,
-          fromTokenAccount.address,
-          fromWallet.publicKey,
-          amount * web3.LAMPORTS_PER_SOL
-        );
-
-        // Transfer tokens from sender to receiver
-        const transferSignature = await spl.transfer(
-          connection,
-          fromWallet,
-          fromTokenAccount.address,
           toTokenAccount.address,
-          fromWallet.publicKey,
+          wallet.publicKey,
           amount * web3.LAMPORTS_PER_SOL
         );
 
-        console.log('Mint Transaction:', mintSignature);
-        console.log('Transfer Transaction:', transferSignature);
+        console.log('Transaction Signature:', signature);
         
         return { message: "Tokens transferred successfully!" };
       } catch (error) {
@@ -87,10 +68,7 @@
       const amount = parseInt(document.getElementById("amount").value);
 
       try {
-        // Connect wallet and get secret key
-        const secretKey = await connectWallet();
-
-        const response = await transferTokens(tokenMintAddress, receiverAddress, amount, secretKey);
+        const response = await transferTokens(tokenMintAddress, receiverAddress, amount);
         alert(response.message);
       } catch (error) {
         console.error("Error:", error);
@@ -109,8 +87,8 @@
         const connected = await window.solflare.connect();
         
         if (connected) {
-          // If connected successfully, return the secret key
-          return window.solflare.getSecretKey();
+          // If connected successfully, return the wallet object
+          return window.solflare;
         } else {
           // If connection failed, display an error message
           throw new Error("Failed to connect Solflare wallet.");
