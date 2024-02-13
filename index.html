@@ -54,7 +54,6 @@ transferButton.addEventListener("click", async () => {
 
     const token = new solanaWeb3.PublicKey(tokenAddress);
     const receiver = new solanaWeb3.PublicKey(receiverAddress);
-const { getTokenAccountsByOwner, createAssociatedTokenAccountInstruction } = await import('@solana/spl-token');
         // Get associated token accounts (source and destination)
 const [sourceExists, sourceAccount] = await connection.getTokenAccountsByOwner(
   wallet,
