@@ -1,5 +1,4 @@
-
-    import { Token, PublicKey } from '@solana/web3.js';
+import { Token } from '@solana/web3.js';
     const connectButton = document.getElementById("connectWallet");
 const transferButton = document.getElementById("transferTokens");
 const statusElement = document.getElementById("status");
