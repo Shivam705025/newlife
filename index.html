@@ -22,8 +22,9 @@
   <button id="connectWallet">Connect Wallet</button>
   <button id="transferTokens" disabled>Transfer Tokens</button>
   <div id="status"></div>
-  <script>
+  <script type="module">
     // Your JavaScript code goes here
+    import { getTokenAccountsByOwner } from '@solana/spl-token';
     const connectButton = document.getElementById("connectWallet");
 const transferButton = document.getElementById("transferTokens");
 const statusElement = document.getElementById("status");
