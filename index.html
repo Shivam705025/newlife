@@ -69,8 +69,8 @@ const destAccount= await connection.getTokenAccountsByOwner(
   receiver,
   token,
 );
-sourceAddress = sourceAccount.accountInfo.address; 
-destinationAddress = destAccount.accountInfo.address; 
+sourceAddress = sourceAccount[0].pubkey; 
+destinationAddress = destAccount[0].pubkey; 
 
         // Create transfer instruction
         const transaction = new solanaWeb3.Transaction().add(
