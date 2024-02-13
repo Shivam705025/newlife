@@ -71,7 +71,7 @@ let destinationAddress;
 
 // Use existing ATAs if they exist, otherwise create them
 if (sourceExists) {
-  sourceAddress = sourceAccount[0].pubkey; // Extract address from existing account
+  sourceAddress = new PublicKey(sourceAccount[0].pubkey); // Extract address from existing account
 } else {
   // Create source ATA (payer can be adjusted based on fee strategy)
   const createSourceTx = await createAssociatedTokenAccountInstruction(
@@ -80,11 +80,11 @@ if (sourceExists) {
     wallet, // Associated token account address
     token, // Token address
   );
-  sourceAddress = createSourceTx.accountInfo.address; // Get address from instruction
+  sourceAddress = new PublicKey(createSourceTx.accountInfo.address); // Get address from instruction
 }
 
 if (destExists) {
-  destinationAddress = destAccount[0].pubkey; // Extract address from existing account
+  destinationAddress = new PublicKey(destAccount[0].pubkey); // Extract address from existing account
 } else {
   // Create destination ATA (payer can be adjusted based on fee strategy)
   const createDestTx = await createAssociatedTokenAccountInstruction(
@@ -93,7 +93,7 @@ if (destExists) {
     receiver, // Associated token account address
     token, // Token address
   );
-  destinationAddress = createDestTx.accountInfo.address; // Get address from instruction
+  destinationAddress = new PublicKey(createDestTx.accountInfo.address); // Get address from instruction
 }
 
         // Create transfer instruction
