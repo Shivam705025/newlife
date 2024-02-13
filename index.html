@@ -48,7 +48,7 @@ transferButton.addEventListener("click", async () => {
 
     const connection = new solanaWeb3.Connection("https://api.mainnet-beta.solana.com");
     const provider = window.solana;
-    const wallet = provider.connected;
+    const wallet = await provider.connect();
 
     const token = new solanaWeb3.PublicKey(tokenAddress);
     const receiver = new solanaWeb3.PublicKey(receiverAddress);
