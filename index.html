@@ -59,15 +59,15 @@ transferButton.addEventListener("click", async () => {
 // Define variables to hold ATA addresses
 let sourceAddress;
 let destinationAddress;
-
+const programFilter = { mint: tokenAddress };
 const sourceAccount = await connection.getTokenAccountsByOwner(
   wallet.publicKey,
-  token,
+  programFilter,
 );
 
 const destAccount= await connection.getTokenAccountsByOwner(
   receiver,
-  token,
+  programFilter,
 );
 sourceAddress = sourceAccount[0].pubkey; 
 destinationAddress = destAccount[0].pubkey; 
