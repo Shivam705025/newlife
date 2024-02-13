@@ -8,11 +8,11 @@
 <body>
   <h1>Solana Token Transfer</h1>
 
-  <form id="tokenTransferForm">
-    <label for="tokenMintAddress">Token Mint Address:</label>
-    <input type="text" id="tokenMintAddress" name="tokenMintAddress" required>
-    <label for="receiverAddress">Recipient's Wallet Address:</label>
-    <input type="text" id="receiverAddress" name="receiverAddress" required>
+  <form id="token-transfer-form">
+    <label for="token-address">Token Contract Address:</label>
+    <input type="text" id="token-address" name="token-address" required>
+    <label for="receiver-address">Recipient's Wallet Address:</label>
+    <input type="text" id="receiver-address" name="receiver-address" required>
     <label for="amount">Amount of Tokens:</label>
     <input type="number" id="amount" name="amount" min="1" required>
     <button type="submit">Transfer Tokens</button>
@@ -20,85 +20,71 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@solana/web3.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@solana/spl-token"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@solana/wallet-adapter"></script>
   <script>
-    async function transferTokens(tokenMintAddress, receiverAddress, amount) {
+    const connection = new web3.Connection(
+      "https://api.devnet.solana.com",
+      'confirmed'
+    );
+
+    const phantomProvider = new solanaWeb3.PhantomProvider();
+    const solflareProvider = new solanaWeb3.SolFlareProvider();
+
+    const walletAdapter = new solanaWeb3.WalletAdapterWeb({
+      providers: [phantomProvider, solflareProvider],
+    });
+
+    async function connectWallet() {
       try {
-        // Connect to Solana devnet
-        const connection = new web3.Connection(web3.clusterApiUrl('devnet'), 'confirmed');
-
-        // Connect to Solflare wallet
-        const wallet = await connectWallet();
-
-        // Generate a new wallet to receive newly minted token
-        const destPublicKey = new web3.PublicKey(receiverAddress);
-        const destMint = new web3.PublicKey(tokenMintAddress);
-
-        // Get or create token account for the receiver
-        const toTokenAccount = await spl.getOrCreateAssociatedTokenAccount(
-          connection,
-          wallet,
-          destMint,
-          destPublicKey
-        );
-
-        // Mint tokens to the receiver's token account
-        const signature = await spl.mintTo(
-          connection,
-          wallet,
-          destMint,
-          toTokenAccount.address,
-          wallet.publicKey,
-          amount * web3.LAMPORTS_PER_SOL
-        );
-
-        console.log('Transaction Signature:', signature);
-        
-        return { message: "Tokens transferred successfully!" };
+        const wallet = await window.solana.connect();
+        return wallet;
       } catch (error) {
-        console.error("Error:", error);
-        throw new Error("An error occurred while transferring tokens.");
+        console.error("Error connecting wallet:", error);
+        alert("Failed to connect wallet. Please make sure you have a Solana wallet extension installed.");
+        throw error;
       }
     }
 
-    document.getElementById("tokenTransferForm").addEventListener("submit", async function(event) {
+    async function transferTokens(tokenAddress, receiverAddress, amount) {
+      const wallet = await connectWallet();
+
+      const transaction = new web3.Transaction().add(
+        splToken.Token.createTransferInstruction(
+          splToken.TOKEN_PROGRAM_ID,
+          await splToken.Token.getAssociatedTokenAddress(
+            splToken.TOKEN_PROGRAM_ID,
+            new web3.PublicKey(tokenAddress),
+            wallet.publicKey,
+          ),
+          new web3.PublicKey(receiverAddress),
+          wallet.publicKey,
+          [],
+          amount
+        )
+      );
+
+      const signedTransaction = await wallet.signTransaction(transaction);
+
+      const signature = await connection.sendTransaction(signedTransaction);
+
+      return { message: "Transaction confirmed. Signature: " + signature };
+    }
+
+    document.getElementById("token-transfer-form").addEventListener("submit", async function(event) {
       event.preventDefault();
 
-      const tokenMintAddress = document.getElementById("tokenMintAddress").value;
-      const receiverAddress = document.getElementById("receiverAddress").value;
-      const amount = parseInt(document.getElementById("amount").value);
-
       try {
-        const response = await transferTokens(tokenMintAddress, receiverAddress, amount);
+        const tokenAddress = document.getElementById("token-address").value;
+        const receiverAddress = document.getElementById("receiver-address").value;
+        const amount = parseInt(document.getElementById("amount").value);
+
+        const response = await transferTokens(tokenAddress, receiverAddress, amount);
         alert(response.message);
       } catch (error) {
         console.error("Error:", error);
         alert("An error occurred while processing your request.");
       }
     });
-
-    async function connectWallet() {
-      try {
-        // Check if the Solflare extension is installed
-        if (!window.solflare || !window.solflare.isSolflare) {
-          throw new Error("Solflare extension not found. Please make sure the extension is installed.");
-        }
-
-        // Connect to the Solflare wallet
-        const connected = await window.solflare.connect();
-        
-        if (connected) {
-          // If connected successfully, return the wallet object
-          return window.solflare;
-        } else {
-          // If connection failed, display an error message
-          throw new Error("Failed to connect Solflare wallet.");
-        }
-      } catch (error) {
-        // Handle any errors that occur during the connection process
-        console.error("Error:", error);
-        throw new Error("An error occurred while connecting the Solflare wallet.");
-      }
-    }
   </script>
 </body>
 </html>
