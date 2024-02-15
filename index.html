@@ -39,7 +39,7 @@
 
         // Check for token metadata (optional)
         const tokenAddress = document.getElementById("tokenAddress").value;
-        const tokenMetadata = await splTokenRegistry.getMint(connection, tokenAddress);
+        const tokenMetadata = await solanasplTokenRegistry.getMint(connection, tokenAddress);
         // Display token name, symbol, decimals (optional)
         console.log("Token Metadata:", tokenMetadata);
       } catch (error) {
