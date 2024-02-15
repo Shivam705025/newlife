@@ -52,7 +52,7 @@
         const receiverAddress = document.getElementById("receiverAddress").value;
         const amount = parseInt(document.getElementById("amount").value);
 
-        const connection = new solanaWeb3.Connection("https://api.mainnet-beta.solana.com");
+        const connection = new solanaWeb3.Connection("https://solana-mainnet.g.alchemy.com/v2/sLinomUEUThzU8V63o27rIlTZHLVFgfe");
         const provider = window.solana;
         const wallet = await provider.connect();
 
