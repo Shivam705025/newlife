@@ -40,9 +40,6 @@
         // Check for token metadata (optional)
         const tokenAddress = document.getElementById("tokenAddress").value;
         console.log("Token Metadata:", tokenAddress);
-        const tokenMetadata = await solanasplTokenRegistry.getMint(connection, tokenAddress);
-        // Display token name, symbol, decimals (optional)
-        console.log("Token Metadata:", tokenMetadata);
       } catch (error) {
         console.error("Error connecting to wallet:", error);
         statusElement.textContent = "Wallet connection failed";
