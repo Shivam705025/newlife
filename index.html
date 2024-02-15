@@ -30,7 +30,7 @@
 
     connectButton.addEventListener("click", async () => {
       try {
-        const connection = new solanaWeb3.Connection("https://api.mainnet-beta.solana.com");
+        const connection = new solanaWeb3.Connection("https://solana-mainnet.g.alchemy.com/v2/sLinomUEUThzU8V63o27rIlTZHLVFgfe");
         const provider = window.solana; // Access wallet provider globally
         const wallet = await provider.connect();
         const publicKey = wallet.publicKey.toBase58();
