@@ -66,13 +66,21 @@
         );
 
         let sourceAddress;
-        if (sourceAccount.value.length > 0) {
-          // Use existing source ATA if found
-          sourceAddress = sourceAccount.value[0].pubkey;
-        } else {
-          statusElement.textContent = "Error: You don't have an associated token account for this token.";
-          return;
-        }
+        
+    if (sourceAccount.value.length > 0) {
+      // Use existing source ATA if found
+      sourceAddress = sourceAccount.value[0].pubkey;
+    } else {
+      // Create source ATA if not found
+      const mint = new solanaWeb3.PublicKey(tokenAddress);
+      const associatedTokenAccount = await splToken.createAssociatedTokenAccount(
+        connection,
+        wallet,
+        mint,
+        wallet.publicKey // Use the wallet's public key as the owner
+      );
+      sourceAddress = associatedTokenAccount;
+    }
 
         // Check for and potentially create destination (receiver's) ATA
         const destAccount = await connection.getTokenAccountsByOwner(
