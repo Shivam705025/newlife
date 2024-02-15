@@ -4,7 +4,6 @@
   <title>Solana Token Transfer DApp</title>
   <script src="https://unpkg.com/@solana/web3.js@latest/lib/index.iife.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@solana/spl-token@latest/lib/cjs/index.min.js"></script>
-<script type="module" src="https://cdn.jsdelivr.net/npm/@solana/spl-token-registry@0.2.4574/+esm"> </script>
 </head>
 <body>
   <h1>Solana Token Transfer</h1>
@@ -24,6 +23,7 @@
   <button id="transferTokens" disabled>Transfer Tokens</button>
   <div id="status"></div>
   <script type="module">
+    import solanasplTokenRegistry from 'https://cdn.jsdelivr.net/npm/@solana/spl-token-registry@0.2.4574/+esm'
     const connectButton = document.getElementById("connectWallet");
     const transferButton = document.getElementById("transferTokens");
     const statusElement = document.getElementById("status");
