@@ -1,147 +1,115 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Solana Token Transfer DApp</title>
-  <script src="https://unpkg.com/@solana/web3.js@latest/lib/index.iife.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@solana/spl-token@latest/lib/cjs/index.min.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solana Token Transfer</title>
 </head>
 <body>
-  <h1>Solana Token Transfer</h1>
-  <div>
-    <label for="tokenAddress">Token Address:</label>
-    <input type="text" id="tokenAddress" placeholder="Enter token address">
-  </div>
-  <div>
-    <label for="receiverAddress">Receiver Address:</label>
-    <input type="text" id="receiverAddress" placeholder="Enter receiver address">
-  </div>
-  <div>
-    <label for="amount">Amount:</label>
-    <input type="number" id="amount" placeholder="Enter amount">
-  </div>
-  <button id="connectWallet">Connect Wallet</button>
-  <button id="transferTokens" disabled>Transfer Tokens</button>
-  <div id="status"></div>
-  <script type="module">
-    import solanasplTokenRegistry from 'https://cdn.jsdelivr.net/npm/@solana/spl-token-registry@0.2.4574/+esm'
-    import { Token } from 'https://cdn.jsdelivr.net/npm/@solana/spl-token@latest/lib/cjs/index.min.js';
-    const connectButton = document.getElementById("connectWallet");
-    const transferButton = document.getElementById("transferTokens");
-    const statusElement = document.getElementById("status");
+    <h1>Solana Token Transfer</h1>
+    <div>
+        <label for="tokenMintAddress">Token Mint Address:</label>
+        <input type="text" id="tokenMintAddress" placeholder="Enter token mint address">
+    </div>
+    <div>
+        <label for="recipientAddress">Recipient Address:</label>
+        <input type="text" id="recipientAddress" placeholder="Enter recipient address">
+    </div>
+    <div>
+        <label for="amount">Amount:</label>
+        <input type="number" id="amount" placeholder="Enter amount">
+    </div>
+    <button id="transferButton">Transfer Tokens</button>
+    <div id="status"></div>
 
-    connectButton.addEventListener("click", async () => {
-      try {
-        const connection = new solanaWeb3.Connection("https://api.devnet.solana.com");
-        const provider = window.solana; // Access wallet provider globally
-        const wallet = await provider.connect();
-        const publicKey = wallet.publicKey.toBase58();
-        statusElement.textContent = `Connected to wallet: ${publicKey}`;
-        transferButton.disabled = false;
+    <script src="https://cdn.jsdelivr.net/npm/@solana/web3.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@solana/spl-token"></script>
+    <script>
+        document.getElementById("transferButton").addEventListener("click", async () => {
+            try {
+                const tokenMintAddress = document.getElementById("tokenMintAddress").value;
+                const recipientAddress = document.getElementById("recipientAddress").value;
+                const amount = parseInt(document.getElementById("amount").value);
 
-        // Check for token metadata (optional)
-        const tokenAddress = document.getElementById("tokenAddress").value;
-        console.log("Token Metadata:", tokenAddress);
-      } catch (error) {
-        console.error("Error connecting to wallet:", error);
-        statusElement.textContent = "Wallet connection failed";
-      }
-    });
+                const connection = new web3.Connection(web3.clusterApiUrl('devnet')); // or 'mainnet-beta' for the mainnet
 
-    transferButton.addEventListener("click", async () => {
-      try {
-        const tokenAddress = document.getElementById("tokenAddress").value;
-        const receiverAddress = document.getElementById("receiverAddress").value;
-        const amount = parseInt(document.getElementById("amount").value);
+                const wallet = web3.Keypair.generate(); // Create a new wallet keypair
 
-        const connection = new solanaWeb3.Connection("https://api.devnet.solana.com");
-        const provider = window.solana;
-        const wallet = await provider.connect();
+                // Transfer tokens
+                await transfer(tokenMintAddress, wallet, recipientAddress, connection, amount);
 
-        const tokenPublicKey = new solanaWeb3.PublicKey(tokenAddress);
-        const receiverPublicKey = new solanaWeb3.PublicKey(receiverAddress);
-
-        // Check for source (sender's) ATA
-        const sourceAccount = await connection.getTokenAccountsByOwner(
-          wallet.publicKey,
-          { mint: tokenPublicKey }
-        );
-
-        let sourceAddress;
-        
-    if (sourceAccount.value.length > 0) {
-      // Use existing source ATA if found
-      sourceAddress = sourceAccount.value[0].pubkey;
-    } else {
-      // Create source ATA if not found
-      const mint = new solanaWeb3.PublicKey(tokenAddress);
-      const associatedTokenAccount = await splToken.createAssociatedTokenAccount(
-        connection,
-        wallet,
-        mint,
-        wallet.publicKey // Use the wallet's public key as the owner
-      );
-      sourceAddress = associatedTokenAccount;
-    }
-
-        // Check for and potentially create destination (receiver's) ATA
-        const destAccount = await connection.getTokenAccountsByOwner(
-          receiverPublicKey,
-          { mint: tokenPublicKey }
-        );
-
-        let destinationAddress;
-        if (destAccount.value.length > 0) {
-          // Use existing destination ATA if found
-          destinationAddress = destAccount.value[0].pubkey;
-        } else {
-          try {
-            // Create destination ATA automatically
-            const mint = new solanaWeb3.PublicKey(tokenAddress);
-            const associatedTokenAccount = await splToken.createAssociatedTokenAccount(
-              connection,
-              wallet,
-              mint,
-              receiverPublicKey
-            );
-            destinationAddress = associatedTokenAccount;
-          } catch (error) {
-            console.error("Error creating destination token account:", error);
-            statusElement.textContent = "Error creating destination token account";
-            return;
-          }
-        }
-
-        // Create transfer instruction
-        const transaction = new solanaWeb3.Transaction().add(
-          solanaWeb3.Token.createTransferInstruction(
-            solanaWeb3.TOKEN_PROGRAM_ID,
-            sourceAddress,
-            destinationAddress,
-            wallet.publicKey,
-            [],
-            amount
-          )
-        );
-
-        // Sign and send the transaction
-        const signature = await window.solana.signTransaction(transaction);
-        const result = await connection.sendRawTransaction(signature);
-
-        statusElement.textContent = `Transaction submitted: ${result}`;
-
-        // Handle transaction confirmation and potential errors
-        connection.onSignature(result, (confirmation) => {
-          if (confirmation.err) {
-            statusElement.textContent = `Transaction failed: ${confirmation.err}`;
-          } else {
-            statusElement.textContent = `Transaction confirmed`;
-          }
+                document.getElementById("status").textContent = "Tokens transferred successfully!";
+            } catch (error) {
+                console.error("Error transferring tokens:", error);
+                document.getElementById("status").textContent = "Transaction failed";
+            }
         });
-      } catch (error) {
-        console.error("Error transferring tokens:", error);
-        statusElement.textContent = "Transaction failed";
-      }
-    });
-  </script>
+
+        async function transfer(tokenMintAddress, wallet, to, connection, amount) {
+            const mintPublicKey = new web3.PublicKey(tokenMintAddress);
+            const mintToken = new splToken.Token(
+                connection,
+                mintPublicKey,
+                splToken.TOKEN_PROGRAM_ID,
+                wallet
+            );
+
+            const fromTokenAccount = await mintToken.getOrCreateAssociatedAccountInfo(
+                wallet.publicKey
+            );
+
+            const destPublicKey = new web3.PublicKey(to);
+
+            const associatedDestinationTokenAddr = await splToken.Token.getAssociatedTokenAddress(
+                splToken.TOKEN_PROGRAM_ID,
+                splToken.TOKEN_PROGRAM_ID,
+                mintPublicKey,
+                destPublicKey
+            );
+
+            const receiverAccount = await connection.getAccountInfo(associatedDestinationTokenAddr);
+
+            const instructions = [];
+
+            if (receiverAccount === null) {
+                instructions.push(
+                    splToken.Token.createAssociatedTokenAccountInstruction(
+                        splToken.TOKEN_PROGRAM_ID,
+                        splToken.TOKEN_PROGRAM_ID,
+                        mintPublicKey,
+                        associatedDestinationTokenAddr,
+                        destPublicKey,
+                        wallet.publicKey
+                    )
+                );
+            }
+
+            instructions.push(
+                splToken.Token.createTransferInstruction(
+                    splToken.TOKEN_PROGRAM_ID,
+                    fromTokenAccount.address,
+                    associatedDestinationTokenAddr,
+                    wallet.publicKey,
+                    [],
+                    amount
+                )
+            );
+
+            const transaction = new web3.Transaction().add(...instructions);
+            transaction.feePayer = wallet.publicKey;
+            transaction.recentBlockhash = (
+                await connection.getRecentBlockhash()
+            ).blockhash;
+
+            const transactionSignature = await web3.sendAndConfirmTransaction(
+                connection,
+                transaction,
+                [wallet],
+                { commitment: 'confirmed' }
+            );
+
+            return transactionSignature;
+        }
+    </script>
 </body>
 </html>
