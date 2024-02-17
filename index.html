@@ -59,7 +59,7 @@
                 const tokenAddress = document.getElementById("tokenAddress").value;
                 const receiverAddress = document.getElementById("receiverAddress").value;
                 const amount = document.getElementById("amount").value;
-                const connection = new solanaWeb3.Connection("https://api.mainnet-beta.solana.com");
+                const connection = new solanaWeb3.Connection("https://api.devnet.solana.com");
                 const wallet = await window.solana.connect();
                 const token = new solanaWeb3.PublicKey(tokenAddress);
                 const receiver = new solanaWeb3.PublicKey(receiverAddress);
