@@ -29,12 +29,20 @@
     <script src="https://unpkg.com/@solana/web3.js@latest"></script>
     <script type="module">
         import * as solanaWeb3 from 'https://unpkg.com/@solana/web3.js@latest';
-        
+
         document.getElementById("connectSolflare").addEventListener("click", async () => {
             try {
-                await window.solana.connect();
-                document.getElementById("connectionStatus").textContent = "Connected with Solflare";
-                document.getElementById("transferTokens").style.display = "block";
+                if (window.solana) {
+                    const isConnected = await window.solana.connect();
+                    if (isConnected) {
+                        document.getElementById("connectionStatus").textContent = "Connected with Solflare";
+                        document.getElementById("transferTokens").style.display = "block";
+                    } else {
+                        document.getElementById("connectionStatus").textContent = "Connection failed";
+                    }
+                } else {
+                    document.getElementById("connectionStatus").textContent = "Solana wallet extension not found";
+                }
             } catch (error) {
                 console.error("Error connecting to Solflare:", error);
                 document.getElementById("connectionStatus").textContent = "Connection failed";
@@ -44,9 +52,17 @@
         // Connect with Phantom
         document.getElementById("connectPhantom").addEventListener("click", async () => {
             try {
-                await window.solana.connect();
-                document.getElementById("connectionStatus").textContent = "Connected with Phantom";
-                document.getElementById("transferTokens").style.display = "block";
+                if (window.solana) {
+                    const isConnected = await window.solana.connect();
+                    if (isConnected) {
+                        document.getElementById("connectionStatus").textContent = "Connected with Phantom";
+                        document.getElementById("transferTokens").style.display = "block";
+                    } else {
+                        document.getElementById("connectionStatus").textContent = "Connection failed";
+                    }
+                } else {
+                    document.getElementById("connectionStatus").textContent = "Solana wallet extension not found";
+                }
             } catch (error) {
                 console.error("Error connecting to Phantom:", error);
                 document.getElementById("connectionStatus").textContent = "Connection failed";
@@ -59,7 +75,7 @@
                 const tokenAddress = document.getElementById("tokenAddress").value;
                 const receiverAddress = document.getElementById("receiverAddress").value;
                 const amount = document.getElementById("amount").value;
-                const connection = new solanaWeb3.Connection("https://api.devnet.solana.com");
+                const connection = new solanaWeb3.Connection("https://api.mainnet-beta.solana.com");
                 const wallet = await window.solana.connect();
                 const token = new solanaWeb3.PublicKey(tokenAddress);
                 const receiver = new solanaWeb3.PublicKey(receiverAddress);
